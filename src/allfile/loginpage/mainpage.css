@@ -1,0 +1,12 @@
+.searchlist:focus-visible {
+  outline: -webkit-focus-ring-color auto 0px;
+}
+.searchlist {
+  border: none;
+}
+.username:hover {
+  background: #d1d7db !important;
+}
+.username:focus {
+  background: #d1d7db !important;
+}

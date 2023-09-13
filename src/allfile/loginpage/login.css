@@ -1,0 +1,16 @@
+.logininput:focus-visible {
+  outline: -webkit-focus-ring-color auto 0px;
+}
+.logininput:focus {
+  border-bottom: 3px solid #fd083314 !important;
+  border-radius: 0px !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+.logininput {
+  border-radius: 8px;
+  height: 40px;
+  border: 3px solid #dce2ff;
+  width: 300px;
+}
