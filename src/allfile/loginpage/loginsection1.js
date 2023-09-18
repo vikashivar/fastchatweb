@@ -1,13 +1,87 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Loginsection1() {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [firstname, setFirstname] = useState("");
   const [pass, setPass] = useState("");
-
   const [error, setError] = useState({});
+  const [error1, setError1] = useState({});
   const [sign, setSign] = useState(true);
+  const [lastname, setLastname] = useState("");
+  let navigate = useNavigate();
 
+  // ------------------------------------------------------------------------------
+  // sign-up
+
+  const onSignup = () => {
+    const auth = getAuth();
+    createUserWithEmailAndPassword(auth, email, pass)
+      .then(async (userCredential) => {
+        // 1Signed in
+        const user = userCredential.user;
+
+        navigate("/user");
+        axios
+          .post(
+            "https://api.chatengine.io/users/",
+            {
+              username: email,
+              first_name: firstname,
+              last_name: lastname,
+              secret: user.uid,
+              // custom_json: { high_score: 2000 },
+            },
+            {
+              headers: {
+                "PRIVATE-KEY": "369d4be9-9dbe-4f13-9c7f-9ed37f749215",
+              },
+            }
+          )
+          .then((res) => {
+            console.log("res", res);
+          })
+          .catch((err) => {
+            console.log("error", err);
+          });
+
+        // localStorage.setItem("username", username);
+        localStorage.setItem("user_details", JSON.stringify(user));
+
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // ..
+      });
+  };
+
+  const onSignin = () => {
+    const auth = getAuth();
+    signInWithEmailAndPassword(auth, email, pass)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        navigate("/user");
+
+        // localStorage.setItem("username", username);
+        localStorage.setItem("userid", email);
+        localStorage.setItem("userpass", pass);
+
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+      });
+  };
+
+  // -------------------------------------------------------------------------------
   function validfunction() {
     const object1 = {};
     let formvalid = true;
@@ -28,18 +102,62 @@ function Loginsection1() {
       formvalid = false;
     }
 
-    if (!username) {
-      object1.username = "Fill user name is required";
+    if (!firstname) {
+      object1.firstname = "Fill user firstname is required";
       formvalid = false;
-    } else if (username.length < 3) {
-      object1.username = "Valid user name is required";
+    } else if (firstname.length < 3) {
+      object1.firstname = "Valid user firstname is required";
+      formvalid = false;
+    }
+    if (!lastname) {
+      object1.lastname = "Fill user lastname is required";
+      formvalid = false;
+    } else if (lastname.length < 3) {
+      object1.lastname = "Valid user lastname is required";
       formvalid = false;
     }
     setError(object1);
-    setPass("");
-    setEmail("");
-    setUsername("");
+
+    if (formvalid) {
+      onSignup();
+      setPass("");
+      setEmail("");
+      setFirstname("");
+      setLastname("");
+    }
   }
+
+  function validfunction1() {
+    const object1 = {};
+    let formvalid = true;
+
+    if (!email) {
+      object1.email = "Fill email is required.";
+      formvalid = false;
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(email)) {
+      object1.email = "Valid email is required.";
+      formvalid = false;
+    }
+
+    if (!pass) {
+      object1.pass = "Fill password is required.";
+      formvalid = false;
+    } else if (pass.length < 8) {
+      object1.pass = "Valid password is required.";
+      formvalid = false;
+    }
+
+    setError1(object1);
+
+    if (formvalid) {
+      onSignin();
+      setPass("");
+      setEmail("");
+      // setFirstname("");
+      // setLastname("");
+    }
+  }
+
   return sign ? (
     <div
       className="d-flex flex-column align-items-center"
@@ -111,7 +229,7 @@ function Loginsection1() {
       </div>
       <div
         onClick={() => {
-          validfunction();
+          validfunction1();
         }}
         className="px-4 py-2 mt-2"
         style={{
@@ -170,13 +288,13 @@ function Loginsection1() {
       </div>
       <div className="d-flex flex-column">
         <input
-          value={username}
+          value={firstname}
           onChange={(e) => {
-            setUsername(e.target.value);
+            setFirstname(e.target.value);
           }}
           type="text"
           className="logininput mb-3 px-3"
-          placeholder="User name"
+          placeholder="First name"
         />
         <span
           className="pb-2"
@@ -186,8 +304,28 @@ function Loginsection1() {
             fontFamily: "ui-sans-serif,sans-serif",
           }}
         >
-          {error?.username}
+          {error?.firstname}
         </span>
+        <input
+          value={lastname}
+          onChange={(e) => {
+            setLastname(e.target.value);
+          }}
+          type="text"
+          className="logininput mb-3 px-3"
+          placeholder="Last name"
+        />
+        <span
+          className="pb-2"
+          style={{
+            fontSize: "13px",
+            color: "#ea0038",
+            fontFamily: "ui-sans-serif,sans-serif",
+          }}
+        >
+          {error?.lastname}
+        </span>
+
         <input
           value={email}
           onChange={(e) => {
@@ -242,7 +380,7 @@ function Loginsection1() {
           cursor: "pointer",
         }}
       >
-        SIGN-UP
+        SIGN-UPdf
       </div>
       <div
         onClick={() => {

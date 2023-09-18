@@ -1,131 +1,138 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import ph from "./search-interface-symbol.png";
+import axios from "axios";
 
 function Chat(props) {
-  const list = [
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object1",
-    "object2",
-  ];
+  const [userlist, setUserlist] = useState();
+
+  useEffect(() => {
+    axios
+      .get("https://api.chatengine.io/users/", {
+        headers: { "PRIVATE-KEY": "369d4be9-9dbe-4f13-9c7f-9ed37f749215" },
+      })
+      .then((e) => {
+        setUserlist(e);
+      });
+  }, []);
+
   return (
-    <div
-      style={{
-        background: "#fff",
-        width: "100%",
-        maxWidth: "35%",
-        height: "100vh",
-        overflow: "scroll",
-      }}
-    >
+    userlist?.data && (
       <div
         style={{
-          padding: "8px 13px",
-          background: "#f0f2f5",
-          border: "1px solid rgb(201 215 237)",
-          position: "sticky",
-          top: "0%",
-        }}
-        className="d-flex align-items-center "
-      >
-        <div
-          style={{
-            width: "30px",
-            height: "30px",
-            background: "#fff",
-            borderRadius: "15px",
-            boxShadow: "#ffc107a8 0px 0px 7px 2px",
-          }}
-        ></div>
-        <div
-          className="ms-4"
-          style={{
-            fontFamily: "Josefin Sans,sans-serif",
-            color: "#ffc107fa",
-            textShadow: "2px 2px 2px #000000c4",
-          }}
-        >
-          USER NAME
-        </div>
-      </div>
-      <div
-        style={{
-          width: "100%",
-          borderBottom: "1px solid rgb(201 215 237)",
-          position: "sticky",
-          top: "47.99px",
           background: "#fff",
+          width: "100%",
+          maxWidth: "35%",
+          height: "100vh",
+          overflow: "scroll",
         }}
       >
-        <input
-          placeholder="Search or start new chat"
-          type="text"
+        <div
           style={{
-            width: "20.4rem",
-            fontSize: "14px",
-            color: "#667781",
-            fontFamily: "Geomanist,sans-serif",
-            padding: "4px 50px",
-            margin: "5px 13px",
+            padding: "8px 13px",
             background: "#f0f2f5",
-            borderRadius: "6px",
+            border: "1px solid rgb(201 215 237)",
+            position: "sticky",
+            top: "0%",
           }}
-          className="searchlist"
-        />
-      </div>
-      <div>
-        {list.map((a, b) => {
-          return (
-            <div
-              onClick={props.section}
-              className="d-flex align-items-center username"
+          className="d-flex align-items-center "
+        >
+          <div
+            style={{
+              width: "30px",
+              height: "30px",
+              background: "#fff",
+              borderRadius: "15px",
+              boxShadow: "#ffc107a8 0px 0px 7px 2px",
+            }}
+          ></div>
+          <div
+            className="ms-4"
+            style={{
+              fontFamily: "Josefin Sans,sans-serif",
+              color: "#ffc107fa",
+              textShadow: "2px 2px 2px #000000c4",
+            }}
+          >
+            USER NAME
+          </div>
+        </div>
+        <div style={{ position: "sticky", top: "47.99px" }}>
+          <div
+            className="position-relative"
+            style={{
+              width: "100%",
+              borderBottom: "1px solid rgb(201 215 237)",
+
+              background: "#fff",
+            }}
+          >
+            <input
+              placeholder="Search or start new chat"
+              type="text"
               style={{
-                borderBottom: "1px solid rgb(201 215 237)",
-                padding: "5px 13px",
+                width: "20.4rem",
+                fontSize: "14px",
+                color: "#667781",
+                fontFamily: "Geomanist,sans-serif",
+                padding: "4px 50px",
+                margin: "5px 13px",
+                background: "#f0f2f5",
+                borderRadius: "6px",
               }}
-            >
+              className="searchlist"
+            />
+            <img
+              src={ph}
+              style={{
+                position: "absolute",
+                width: "12px",
+                height: "auto",
+                left: "25px",
+                top: "50%",
+                transform: "translateY(-50%)",
+              }}
+              alt=""
+            />
+          </div>
+        </div>
+        <div>
+          {userlist?.data.map((a, b) => {
+            return (
               <div
-                style={{
-                  width: "35px",
-                  height: "35px",
-                  background: "green",
-                  borderRadius: "17px",
+                key={b}
+                onClick={() => {
+                  props.section();
+                  props.userdata(a);
                 }}
-              ></div>
-              <div
-                className="ms-4"
+                className="d-flex align-items-center username"
                 style={{
-                  fontFamily: "Josefin Sans,sans-serif",
-                  color: "#ffc107fa",
+                  borderBottom: "1px solid rgb(201 215 237)",
+                  padding: "5px 13px",
                 }}
               >
-                Contect name
+                <div
+                  style={{
+                    width: "35px",
+                    height: "35px",
+                    background: "green",
+                    borderRadius: "17px",
+                  }}
+                ></div>
+                <div
+                  className="ms-4"
+                  style={{
+                    fontFamily: "Josefin Sans,sans-serif",
+                    color: "#ffc107fa",
+                  }}
+                >
+                  {a.username}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+    )
   );
 }
 

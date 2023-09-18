@@ -1,15 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Chat from "./chat";
 import photo from "./chat (1).png";
 import Chat1 from "./chat1";
 import Chat2 from "./chat2";
+import axios from "axios";
 
-function Mainpage() {
+function Mainpage(props) {
   const [section, setSection] = useState(false);
+  const [userlist, setUserlist] = useState();
+  const [detail, setDetail] = useState({});
+  console.log(detail);
+
+  function userdata(e) {
+    setDetail(e);
+  }
 
   function sectiontrue() {
     setSection(true);
   }
+
+  useEffect(() => {
+    axios
+      .get("https://api.chatengine.io/users/", {
+        headers: { "PRIVATE-KEY": "369d4be9-9dbe-4f13-9c7f-9ed37f749215" },
+      })
+      .then((e) => {
+        setUserlist(e);
+      });
+  }, []);
+  // console.log(userlist?.data);
 
   return (
     <div>
@@ -32,8 +51,8 @@ function Mainpage() {
           </div>
         </div>
         <div className="d-flex ">
-          <Chat section={sectiontrue}></Chat>
-          {section ? <Chat2></Chat2> : <Chat1></Chat1>}
+          <Chat section={sectiontrue} userdata={userdata}></Chat>
+          {section ? <Chat2 detail={detail}></Chat2> : <Chat1></Chat1>}
         </div>
       </div>
     </div>
