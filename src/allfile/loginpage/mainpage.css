@@ -10,3 +10,6 @@
 .username:focus {
   background: #d1d7db !important;
 }
+.popup-content {
+  width: 22.5rem !important;
+}

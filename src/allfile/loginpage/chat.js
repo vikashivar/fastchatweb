@@ -1,22 +1,32 @@
 import React, { useEffect, useState } from "react";
 import ph from "./search-interface-symbol.png";
 import axios from "axios";
+import "reactjs-popup/dist/index.css";
 
 function Chat(props) {
   const [userlist, setUserlist] = useState();
+  const [listarray, setListarray] = useState();
+
+  const list = JSON.parse(localStorage.getItem("user_details")).email;
+  console.log("object", list);
 
   useEffect(() => {
+    console.log("called");
     axios
       .get("https://api.chatengine.io/users/", {
         headers: { "PRIVATE-KEY": "369d4be9-9dbe-4f13-9c7f-9ed37f749215" },
       })
       .then((e) => {
         setUserlist(e);
+
+        setListarray(e.data.filter((a) => a.username !== list));
+        props.searchlist(e.data.filter((a) => a.username !== list));
       });
   }, []);
 
   return (
-    userlist?.data && (
+    userlist?.data &&
+    listarray && (
       <div
         style={{
           background: "#fff",
@@ -96,13 +106,17 @@ function Chat(props) {
           </div>
         </div>
         <div>
-          {userlist?.data.map((a, b) => {
+          {listarray.map((a, b) => {
             return (
               <div
                 key={b}
                 onClick={() => {
                   props.section();
                   props.userdata(a);
+                  props.postchat({
+                    "User-Name": a.username,
+                    "User-Secret": a.secret,
+                  });
                 }}
                 className="d-flex align-items-center username"
                 style={{

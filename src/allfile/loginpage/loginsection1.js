@@ -34,7 +34,6 @@ function Loginsection1() {
               first_name: firstname,
               last_name: lastname,
               secret: user.uid,
-              // custom_json: { high_score: 2000 },
             },
             {
               headers: {
@@ -48,8 +47,6 @@ function Loginsection1() {
           .catch((err) => {
             console.log("error", err);
           });
-
-        // localStorage.setItem("username", username);
         localStorage.setItem("user_details", JSON.stringify(user));
 
         // ...
@@ -69,9 +66,7 @@ function Loginsection1() {
         const user = userCredential.user;
         navigate("/user");
 
-        // localStorage.setItem("username", username);
-        localStorage.setItem("userid", email);
-        localStorage.setItem("userpass", pass);
+        localStorage.setItem("user_details", JSON.stringify(user));
 
         // ...
       })
