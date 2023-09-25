@@ -14,15 +14,16 @@ function Mainpage(props) {
 
   const [postchat, setPostchat] = useState({});
   const [getchat, setGetchat] = useState();
-  console.log("post", postchat);
-  console.log(getchat);
+  const [chatlist, setChatlist] = useState([]);
+  const list1 = JSON.parse(localStorage.getItem("user_details"));
+
   const [list, setList] = useState([]);
-
-  console.log("list", list);
-
+  const [chatid, setChatid] = useState();
+  const [chatsend, setChatsend] = useState("");
   function searchlist(e) {
     setList(e);
   }
+  console.log("object,", list);
 
   function postgetchat(e) {
     setPostchat(e);
@@ -35,17 +36,134 @@ function Mainpage(props) {
   function sectiontrue() {
     setSection(true);
   }
+  function chatidd(e) {
+    setChatid(e);
+  }
+  function chatmsend(e) {
+    setChatsend(e);
+  }
+  useEffect(() => {
+    axios
+      .put(
+        "https://api.chatengine.io/chats/",
+        {
+          usernames: [list1?.email, postchat?.username],
+          // title: "Another Surprise Party!",
+          is_direct_chat: true,
+        },
+        {
+          headers: {
+            "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+            "User-Name": list1?.email,
+            "User-Secret": list1?.uid,
+          },
+        }
+      )
+      .then((res) => {
+        console.log("res", res);
+      })
+      .catch((err) => {
+        console.log("err", { err });
+      });
+  }, [postchat]);
+  // see after------------------------------------------------------------
+  useEffect(() => {
+    axios
+      .get("https://api.chatengine.io/chats/", {
+        headers: {
+          "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+          "User-Name": list1?.email,
+          "User-Secret": list1?.uid,
+        },
+      })
+      .then((res) => {
+        console.log("res1", res);
+        let list = [];
+        res.data?.map((item) => {
+          // list.push(item);
+          // if (item?.last_message?.text) {
+          //   list.push(item);
+          // }
+          const otherUser = item.people?.find(
+            (o) => o.person.username !== list1?.email
+          );
+          const currentUser = item.people?.find(
+            (o) => o?.person?.username == list1?.email
+          );
+          list.push({ ...item, otherUser, currentUser });
+        });
+        setChatlist(list);
+      })
+      .catch((err) => {
+        console.log("err1", { err });
+      });
+  }, [postchat]);
 
   useEffect(() => {
     axios
       .get("https://api.chatengine.io/users/", {
-        headers: { "PRIVATE-KEY": "369d4be9-9dbe-4f13-9c7f-9ed37f749215" },
+        headers: { "PRIVATE-KEY": "09b33678-28ea-45d2-806d-1935554db565" },
       })
       .then((e) => {
         setUserlist(e);
       });
   }, []);
-  // console.log(userlist?.data);
+
+  const [chatdata, setChatdata] = useState("");
+
+  useEffect(() => {
+    if (chatid) {
+      getMessages();
+    }
+  }, [chatid]);
+
+  const getMessages = () => {
+    axios
+      .get(`https://api.chatengine.io/chats/${chatid}/messages/`, {
+        headers: {
+          "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+          "User-Name": list1?.email,
+          "User-Secret": list1?.uid,
+        },
+      })
+      .then((e) => {
+        setChatdata(e);
+      })
+      .catch((e) => {
+        setChatdata(e);
+      });
+  };
+  console.log("chatdata", chatdata);
+  console.log("chatid", chatid);
+
+  function chatmessagesend() {
+    axios
+      .post(
+        `https://api.chatengine.io/chats/${chatid}/messages/`,
+        {
+          text: chatsend,
+          attachment_urls: [
+            "https://chat-engine-assets.s3.amazonaws.com/arrow-min.png",
+            "https://chat-engine-assets.s3.amazonaws.com/click.mp3",
+          ],
+          custom_json: "mm",
+        },
+        {
+          headers: {
+            "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+            "User-Name": list1?.email,
+            "User-Secret": list1?.uid,
+          },
+        }
+      )
+      .then((e) => {
+        console.log("right", e);
+        getMessages();
+      })
+      .catch((e) => {
+        console.log("wrong", e);
+      });
+  }
 
   return (
     <div>
@@ -147,9 +265,9 @@ function Mainpage(props) {
                         setSection(true);
                         setDetail(a);
                         setPostchat({
-                          "User-Name": a?.username,
-                          "User-Secret": a?.secret,
+                          username: a?.username,
                         });
+                        // setChatid(a?.id);
                       }}
                       className="d-flex align-items-center username"
                       style={{
@@ -189,8 +307,20 @@ function Mainpage(props) {
             userdata={userdata}
             postchat={postgetchat}
             searchlist={searchlist}
+            chatlist={chatlist}
+            chatidd={chatidd}
           ></Chat>
-          {section ? <Chat2 detail={detail}></Chat2> : <Chat1></Chat1>}
+          {section ? (
+            <Chat2
+              detail={detail}
+              chatmsend={chatmsend}
+              chatsend={chatsend}
+              chatmessagesend={chatmessagesend}
+              chatdata={chatdata}
+            ></Chat2>
+          ) : (
+            <Chat1></Chat1>
+          )}
         </div>
       </div>
     </div>

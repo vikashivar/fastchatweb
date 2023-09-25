@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import photo from "./peakpx.jpg";
 import ph from "./send.png";
+import axios from "axios";
 
 function Chat2(props) {
+  const list1 = JSON.parse(localStorage.getItem("user_details"));
+
   return (
     <div
       style={{
@@ -41,9 +44,27 @@ function Chat2(props) {
             textShadow: "2px 2px 2px #000000c4",
           }}
         >
-          {props?.detail?.first_name}
+          {props.detail?.otherUser?.person?.first_name}
           {` `}
-          {props?.detail?.last_name}
+          {props.detail?.otherUser?.person?.last_name}
+        </div>
+      </div>
+      <div>
+        <div style={{}} className="pt-3 ps-3">
+          {props.chatdata &&
+            props.chatdata?.data.map((a) => {
+              console.log("a", a);
+              return (
+                <div
+                  style={{
+                    textAlign:
+                      a.sender_username == list1?.email ? "end" : "start",
+                  }}
+                >
+                  {a?.text}
+                </div>
+              );
+            })}
         </div>
       </div>
       {/* ======================================================= */}
@@ -58,6 +79,10 @@ function Chat2(props) {
           }}
         >
           <input
+            value={props.chatsend}
+            onChange={(e) => {
+              props.chatmsend(e.target.value);
+            }}
             placeholder="Type a massage"
             type="text"
             style={{
@@ -75,6 +100,7 @@ function Chat2(props) {
           />
 
           <img
+            onClick={props.chatmessagesend}
             onMouseOver={(e) => {
               e.target.style.background = "blue";
             }}
