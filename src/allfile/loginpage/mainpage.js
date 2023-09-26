@@ -7,23 +7,60 @@ import axios from "axios";
 import ph from "./search-interface-symbol.png";
 import Popup from "reactjs-popup";
 
+let socket;
+
 function Mainpage(props) {
   const [section, setSection] = useState(false);
   const [userlist, setUserlist] = useState();
   const [detail, setDetail] = useState({});
-
   const [postchat, setPostchat] = useState({});
   const [getchat, setGetchat] = useState();
   const [chatlist, setChatlist] = useState([]);
   const list1 = JSON.parse(localStorage.getItem("user_details"));
-
   const [list, setList] = useState([]);
   const [chatid, setChatid] = useState();
   const [chatsend, setChatsend] = useState("");
+  const [searchtext1, setSearchtext1] = useState("");
+  const [searchtextarry1, setSearchtextarry1] = useState([]);
+  const [searchtext2, setSearchtext2] = useState("");
+  const [searchtextarry2, setSearchtextarry2] = useState([]);
+  const [chatdata, setChatdata] = useState([]);
+
+  useEffect(() => {
+    const zz = searchtextarry2.filter((a) => {
+      if (a.username.includes(searchtext2.trim())) {
+        return true;
+      }
+      return false;
+    });
+    searchlist(zz);
+  }, [searchtextarry2, searchtext2]);
+
+  useEffect(() => {
+    filterchatlist1();
+  }, [searchtext1, searchtextarry1]);
+
+  function filterchatlist1() {
+    const zz = searchtextarry1.filter((a) => {
+      if (a?.otherUser?.person?.username.includes(searchtext1.trim())) {
+        return true;
+      }
+      return false;
+    });
+
+    setChatlist(zz);
+  }
+
+  function setSearchtextarry2funtion(e) {
+    setSearchtextarry2(e);
+  }
+
+  function searchattextfunction1(e) {
+    setSearchtext1(e);
+  }
   function searchlist(e) {
     setList(e);
   }
-  console.log("object,", list);
 
   function postgetchat(e) {
     setPostchat(e);
@@ -42,6 +79,15 @@ function Mainpage(props) {
   function chatmsend(e) {
     setChatsend(e);
   }
+
+  useEffect(() => {
+    connctToSocket();
+
+    return () => {
+      socket?.close();
+    };
+  }, []);
+
   useEffect(() => {
     axios
       .put(
@@ -59,13 +105,52 @@ function Mainpage(props) {
           },
         }
       )
-      .then((res) => {
-        console.log("res", res);
-      })
-      .catch((err) => {
-        console.log("err", { err });
-      });
+      .then((res) => {})
+      .catch((err) => {});
   }, [postchat]);
+  console.log("chatdata", chatdata);
+  const connctToSocket = () => {
+    socket = new WebSocket(
+      `wss://api.chatengine.io/person/?publicKey=${"5d479425-5e0d-44c0-949f-640752939a58"}&username=${
+        list1?.email
+      }&secret=${list1?.uid}`
+    );
+
+    socket.onopen = (event) => console.log(event);
+    socket.onclose = (event) => console.log(event);
+    socket.onmessage = (event) => {
+      console.log("event", JSON.parse(event.data));
+      const data = JSON.parse(event.data);
+      if (data.action == "new_message") {
+        setChatdata([...chatdata, data?.data?.message]);
+      }
+
+      axios
+        .get("https://api.chatengine.io/chats/", {
+          headers: {
+            "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+            "User-Name": list1?.email,
+            "User-Secret": list1?.uid,
+          },
+        })
+        .then((res) => {
+          let list = [];
+          res.data?.map((item) => {
+            const otherUser = item.people?.find(
+              (o) => o.person.username !== list1?.email
+            );
+            const currentUser = item.people?.find(
+              (o) => o?.person?.username == list1?.email
+            );
+            list.push({ ...item, otherUser, currentUser });
+          });
+          setChatlist([...list]);
+          // setSearchtextarry1([...list]);
+        })
+        .catch((err) => {});
+    };
+    socket.onerror = (error) => console.log(error);
+  };
   // see after------------------------------------------------------------
   useEffect(() => {
     axios
@@ -77,13 +162,8 @@ function Mainpage(props) {
         },
       })
       .then((res) => {
-        console.log("res1", res);
         let list = [];
         res.data?.map((item) => {
-          // list.push(item);
-          // if (item?.last_message?.text) {
-          //   list.push(item);
-          // }
           const otherUser = item.people?.find(
             (o) => o.person.username !== list1?.email
           );
@@ -92,11 +172,10 @@ function Mainpage(props) {
           );
           list.push({ ...item, otherUser, currentUser });
         });
-        setChatlist(list);
+        setChatlist([...list]);
+        setSearchtextarry1([...list]);
       })
-      .catch((err) => {
-        console.log("err1", { err });
-      });
+      .catch((err) => {});
   }, [postchat]);
 
   useEffect(() => {
@@ -108,8 +187,6 @@ function Mainpage(props) {
         setUserlist(e);
       });
   }, []);
-
-  const [chatdata, setChatdata] = useState("");
 
   useEffect(() => {
     if (chatid) {
@@ -127,42 +204,40 @@ function Mainpage(props) {
         },
       })
       .then((e) => {
-        setChatdata(e);
+        setChatdata(e.data);
       })
-      .catch((e) => {
-        setChatdata(e);
-      });
+      .catch((e) => {});
   };
-  console.log("chatdata", chatdata);
-  console.log("chatid", chatid);
 
   function chatmessagesend() {
-    axios
-      .post(
-        `https://api.chatengine.io/chats/${chatid}/messages/`,
-        {
-          text: chatsend,
-          attachment_urls: [
-            "https://chat-engine-assets.s3.amazonaws.com/arrow-min.png",
-            "https://chat-engine-assets.s3.amazonaws.com/click.mp3",
-          ],
-          custom_json: "mm",
-        },
-        {
-          headers: {
-            "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
-            "User-Name": list1?.email,
-            "User-Secret": list1?.uid,
+    chatsend.trim() &&
+      axios
+        .post(
+          `https://api.chatengine.io/chats/${chatid}/messages/`,
+          {
+            text: chatsend,
+            attachment_urls: [
+              "https://chat-engine-assets.s3.amazonaws.com/arrow-min.png",
+              "https://chat-engine-assets.s3.amazonaws.com/click.mp3",
+            ],
+            custom_json: "mm",
           },
-        }
-      )
-      .then((e) => {
-        console.log("right", e);
-        getMessages();
-      })
-      .catch((e) => {
-        console.log("wrong", e);
-      });
+          {
+            headers: {
+              "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+              "User-Name": list1?.email,
+              "User-Secret": list1?.uid,
+            },
+          }
+        )
+        .then((e) => {
+          // getMessages();
+          setChatdata([...chatdata, e.data]);
+          setChatsend("");
+        })
+        .catch((e) => {
+          setChatsend("");
+        });
   }
 
   return (
@@ -228,6 +303,10 @@ function Mainpage(props) {
                   }}
                 >
                   <input
+                    value={searchtext2}
+                    onChange={(e) => {
+                      setSearchtext2(e.target.value);
+                    }}
                     placeholder="Search Contect"
                     type="text"
                     style={{
@@ -256,7 +335,7 @@ function Mainpage(props) {
                   />
                 </div>
 
-                {list.map((a, b) => {
+                {list?.map((a, b) => {
                   return (
                     <div
                       key={b}
@@ -305,10 +384,14 @@ function Mainpage(props) {
           <Chat
             section={sectiontrue}
             userdata={userdata}
-            postchat={postgetchat}
+            // postchat={postgetchat}
             searchlist={searchlist}
             chatlist={chatlist}
             chatidd={chatidd}
+            searchtext1={searchtext1}
+            searchattextfunction1={searchattextfunction1}
+            filterchatlist1={filterchatlist1}
+            setSearchtextarry2funtion={setSearchtextarry2funtion}
           ></Chat>
           {section ? (
             <Chat2

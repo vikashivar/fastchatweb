@@ -19,6 +19,9 @@ function Chat(props) {
 
         setListarray(e.data.filter((a) => a.username !== list));
         props.searchlist(e.data.filter((a) => a.username !== list));
+        props.setSearchtextarry2funtion(
+          e.data.filter((a) => a.username !== list)
+        );
       });
   }, []);
 
@@ -59,7 +62,7 @@ function Chat(props) {
             textShadow: "2px 2px 2px #000000c4",
           }}
         >
-          USER NAME
+          {list}
         </div>
       </div>
       <div style={{ position: "sticky", top: "47.99px" }}>
@@ -73,6 +76,11 @@ function Chat(props) {
           }}
         >
           <input
+            value={props.searchtext1}
+            onChange={(e) => {
+              props.searchattextfunction1(e.target.value);
+              // props.filterchatlist1();
+            }}
             placeholder="Search or start new chat"
             type="text"
             style={{

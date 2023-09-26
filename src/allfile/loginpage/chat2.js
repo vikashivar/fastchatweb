@@ -16,7 +16,7 @@ function Chat2(props) {
 
         background: `#fff url(${photo}) no-repeat center`,
       }}
-      className="d-flex flex-column justify-content-between"
+      className="d-flex flex-column justify-content-between "
     >
       <div
         style={{
@@ -50,14 +50,29 @@ function Chat2(props) {
         </div>
       </div>
       <div>
-        <div style={{}} className="pt-3 ps-3">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            overflow: "scroll",
+            height: "365px",
+          }}
+          className="px-3 pb-3"
+        >
           {props.chatdata &&
-            props.chatdata?.data.map((a) => {
-              console.log("a", a);
+            props.chatdata.map((a, b) => {
               return (
                 <div
+                  key={b}
+                  className="px-2 mt-1"
                   style={{
-                    textAlign:
+                    paddingBottom: "8px",
+                    paddingTop: "6px",
+                    color: "#111b21",
+                    borderRadius: "5px",
+                    background:
+                      a.sender_username == list1?.email ? "#F3CFC6" : "#fff",
+                    alignSelf:
                       a.sender_username == list1?.email ? "end" : "start",
                   }}
                 >
