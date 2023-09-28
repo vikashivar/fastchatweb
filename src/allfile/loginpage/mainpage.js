@@ -88,12 +88,12 @@ function Mainpage(props) {
     };
   }, []);
 
-  useEffect(() => {
-    axios
+  const createOrGetChat = async (username) => {
+    await axios
       .put(
         "https://api.chatengine.io/chats/",
         {
-          usernames: [list1?.email, postchat?.username],
+          usernames: [list1?.email, username],
           // title: "Another Surprise Party!",
           is_direct_chat: true,
         },
@@ -105,9 +105,25 @@ function Mainpage(props) {
           },
         }
       )
-      .then((res) => {})
+      .then((res) => {
+        console.log("res", res);
+        const otherUser = res.data?.people?.find(
+          (o) => o.person.username !== list1?.email
+        );
+        const currentUser = res.data?.people?.find(
+          (o) => o?.person?.username == list1?.email
+        );
+        setChatid(res.data?.id);
+        setSection(true);
+        setDetail({ otherUser, currentUser, ...res.data });
+        getMessages(res.data?.id);
+        const isAlready = chatlist.find((o) => o.id == res.data?.id);
+        if (isAlready) return;
+        setChatlist([{ otherUser, currentUser, ...res.data }, ...chatlist]);
+      })
       .catch((err) => {});
-  }, [postchat]);
+  };
+
   console.log("chatdata", chatdata);
   const connctToSocket = () => {
     socket = new WebSocket(
@@ -125,34 +141,19 @@ function Mainpage(props) {
         setChatdata([...chatdata, data?.data?.message]);
       }
 
-      axios
-        .get("https://api.chatengine.io/chats/", {
-          headers: {
-            "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
-            "User-Name": list1?.email,
-            "User-Secret": list1?.uid,
-          },
-        })
-        .then((res) => {
-          let list = [];
-          res.data?.map((item) => {
-            const otherUser = item.people?.find(
-              (o) => o.person.username !== list1?.email
-            );
-            const currentUser = item.people?.find(
-              (o) => o?.person?.username == list1?.email
-            );
-            list.push({ ...item, otherUser, currentUser });
-          });
-          setChatlist([...list]);
-          // setSearchtextarry1([...list]);
-        })
-        .catch((err) => {});
+      if (data.action == "new_chat") {
+        chatdataapifunction();
+      }
     };
     socket.onerror = (error) => console.log(error);
   };
+
   // see after------------------------------------------------------------
   useEffect(() => {
+    chatdataapifunction();
+  }, []);
+
+  function chatdataapifunction() {
     axios
       .get("https://api.chatengine.io/chats/", {
         headers: {
@@ -172,11 +173,17 @@ function Mainpage(props) {
           );
           list.push({ ...item, otherUser, currentUser });
         });
-        setChatlist([...list]);
-        setSearchtextarry1([...list]);
+        const aa = list.filter((a) => {
+          return a.last_message.text;
+        });
+
+        setChatlist([...aa]);
+        setSearchtextarry1([...aa]);
+        console.log("aa", aa);
+        console.log("list", list);
       })
       .catch((err) => {});
-  }, [postchat]);
+  }
 
   useEffect(() => {
     axios
@@ -190,13 +197,13 @@ function Mainpage(props) {
 
   useEffect(() => {
     if (chatid) {
-      getMessages();
+      getMessages(chatid);
     }
   }, [chatid]);
 
-  const getMessages = () => {
+  const getMessages = (id) => {
     axios
-      .get(`https://api.chatengine.io/chats/${chatid}/messages/`, {
+      .get(`https://api.chatengine.io/chats/${id}/messages/`, {
         headers: {
           "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
           "User-Name": list1?.email,
@@ -216,10 +223,7 @@ function Mainpage(props) {
           `https://api.chatengine.io/chats/${chatid}/messages/`,
           {
             text: chatsend,
-            attachment_urls: [
-              "https://chat-engine-assets.s3.amazonaws.com/arrow-min.png",
-              "https://chat-engine-assets.s3.amazonaws.com/click.mp3",
-            ],
+            attachment_urls: [],
             custom_json: "mm",
           },
           {
@@ -234,11 +238,16 @@ function Mainpage(props) {
           // getMessages();
           setChatdata([...chatdata, e.data]);
           setChatsend("");
+          console.log("setchatdata", chatdata);
         })
         .catch((e) => {
           setChatsend("");
         });
   }
+
+  // if (chatdata.length) {
+  //   setList;
+  // }
 
   return (
     <div>
@@ -341,12 +350,11 @@ function Mainpage(props) {
                       key={b}
                       onClick={() => {
                         close();
-                        setSection(true);
-                        setDetail(a);
-                        setPostchat({
-                          username: a?.username,
-                        });
+
+                        createOrGetChat(a?.username);
                         // setChatid(a?.id);
+                        console.log("popup", a);
+                        console.log(a.last_name, a.first_name, a.username);
                       }}
                       className="d-flex align-items-center username"
                       style={{

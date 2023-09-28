@@ -16,6 +16,7 @@ function Chat(props) {
       })
       .then((e) => {
         setUserlist(e);
+        console.log("e", e);
 
         setListarray(e.data.filter((a) => a.username !== list));
         props.searchlist(e.data.filter((a) => a.username !== list));
