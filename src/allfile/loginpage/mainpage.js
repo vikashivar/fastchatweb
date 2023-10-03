@@ -25,6 +25,7 @@ function Mainpage(props) {
   const [searchtext2, setSearchtext2] = useState("");
   const [searchtextarry2, setSearchtextarry2] = useState([]);
   const [chatdata, setChatdata] = useState([]);
+  const [apicall, setapicall] = useState("");
 
   useEffect(() => {
     const zz = searchtextarry2.filter((a) => {
@@ -99,14 +100,13 @@ function Mainpage(props) {
         },
         {
           headers: {
-            "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+            "Project-ID": "7371435b-94b2-48b3-81cf-f076ed500900",
             "User-Name": list1?.email,
             "User-Secret": list1?.uid,
           },
         }
       )
       .then((res) => {
-        console.log("res", res);
         const otherUser = res.data?.people?.find(
           (o) => o.person.username !== list1?.email
         );
@@ -124,10 +124,9 @@ function Mainpage(props) {
       .catch((err) => {});
   };
 
-  console.log("chatdata", chatdata);
   const connctToSocket = () => {
     socket = new WebSocket(
-      `wss://api.chatengine.io/person/?publicKey=${"5d479425-5e0d-44c0-949f-640752939a58"}&username=${
+      `wss://api.chatengine.io/person/?publicKey=${"7371435b-94b2-48b3-81cf-f076ed500900"}&username=${
         list1?.email
       }&secret=${list1?.uid}`
     );
@@ -144,20 +143,24 @@ function Mainpage(props) {
       if (data.action == "new_chat") {
         chatdataapifunction();
       }
+      apicallfunction();
     };
     socket.onerror = (error) => console.log(error);
   };
 
   // see after------------------------------------------------------------
+  function apicallfunction(e) {
+    setapicall(e);
+  }
   useEffect(() => {
     chatdataapifunction();
-  }, []);
+  }, [apicall]);
 
   function chatdataapifunction() {
     axios
       .get("https://api.chatengine.io/chats/", {
         headers: {
-          "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+          "Project-ID": "7371435b-94b2-48b3-81cf-f076ed500900",
           "User-Name": list1?.email,
           "User-Secret": list1?.uid,
         },
@@ -165,13 +168,25 @@ function Mainpage(props) {
       .then((res) => {
         let list = [];
         res.data?.map((item) => {
+          let isRead = true;
           const otherUser = item.people?.find(
             (o) => o.person.username !== list1?.email
           );
           const currentUser = item.people?.find(
             (o) => o?.person?.username == list1?.email
           );
-          list.push({ ...item, otherUser, currentUser });
+          if (
+            currentUser?.person?.username !==
+            item?.last_message?.sender_username
+          ) {
+            if (
+              item?.last_message?.id &&
+              item?.last_message?.id !== currentUser?.last_read
+            ) {
+              isRead = false;
+            }
+          }
+          list.push({ ...item, isRead, otherUser, currentUser });
         });
         const aa = list.filter((a) => {
           return a.last_message.text;
@@ -179,8 +194,6 @@ function Mainpage(props) {
 
         setChatlist([...aa]);
         setSearchtextarry1([...aa]);
-        console.log("aa", aa);
-        console.log("list", list);
       })
       .catch((err) => {});
   }
@@ -188,7 +201,7 @@ function Mainpage(props) {
   useEffect(() => {
     axios
       .get("https://api.chatengine.io/users/", {
-        headers: { "PRIVATE-KEY": "09b33678-28ea-45d2-806d-1935554db565" },
+        headers: { "PRIVATE-KEY": "18c3277d-921a-440f-b8b2-b5b3dab4ff99" },
       })
       .then((e) => {
         setUserlist(e);
@@ -205,7 +218,7 @@ function Mainpage(props) {
     axios
       .get(`https://api.chatengine.io/chats/${id}/messages/`, {
         headers: {
-          "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+          "Project-ID": "7371435b-94b2-48b3-81cf-f076ed500900",
           "User-Name": list1?.email,
           "User-Secret": list1?.uid,
         },
@@ -228,7 +241,7 @@ function Mainpage(props) {
           },
           {
             headers: {
-              "Project-ID": "5d479425-5e0d-44c0-949f-640752939a58",
+              "Project-ID": "7371435b-94b2-48b3-81cf-f076ed500900",
               "User-Name": list1?.email,
               "User-Secret": list1?.uid,
             },
@@ -238,19 +251,39 @@ function Mainpage(props) {
           // getMessages();
           setChatdata([...chatdata, e.data]);
           setChatsend("");
-          console.log("setchatdata", chatdata);
         })
         .catch((e) => {
           setChatsend("");
         });
   }
 
-  // if (chatdata.length) {
-  //   setList;
-  // }
+  function readmesssage(id) {
+    axios.patch(
+      `https://api.chatengine.io/chats/${chatid}/people/`,
+      { last_read: detail?.last_message?.id },
+      {
+        headers: {
+          "Project-ID": "7371435b-94b2-48b3-81cf-f076ed500900",
+          "User-Name": list1?.email,
+          "User-Secret": list1?.uid,
+        },
+      }
+    );
+  }
+
+  useEffect(() => {
+    if (
+      detail.last_message?.sender_username !==
+      detail.currentUser?.person?.username
+    ) {
+      if (detail?.last_message?.id !== detail?.currentUser?.last_read) {
+        readmesssage();
+      }
+    }
+  }, [detail]);
 
   return (
-    <div>
+    <div style={{ overflow: "hiddne" }}>
       <div style={{ width: "100%", height: "100vh", background: "#ffc0cb" }}>
         <div
           className="d-flex align-items-center position-sticky justify-content-between"
@@ -352,9 +385,6 @@ function Mainpage(props) {
                         close();
 
                         createOrGetChat(a?.username);
-                        // setChatid(a?.id);
-                        console.log("popup", a);
-                        console.log(a.last_name, a.first_name, a.username);
                       }}
                       className="d-flex align-items-center username"
                       style={{
@@ -400,6 +430,7 @@ function Mainpage(props) {
             searchattextfunction1={searchattextfunction1}
             filterchatlist1={filterchatlist1}
             setSearchtextarry2funtion={setSearchtextarry2funtion}
+            apicallfunction={apicallfunction}
           ></Chat>
           {section ? (
             <Chat2

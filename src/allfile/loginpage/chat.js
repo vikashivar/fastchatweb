@@ -6,25 +6,9 @@ import "reactjs-popup/dist/index.css";
 function Chat(props) {
   const [userlist, setUserlist] = useState();
   const [listarray, setListarray] = useState([]);
+  const [active, setactive] = useState();
 
   const list = JSON.parse(localStorage.getItem("user_details")).email;
-
-  useEffect(() => {
-    axios
-      .get("https://api.chatengine.io/users/", {
-        headers: { "PRIVATE-KEY": "09b33678-28ea-45d2-806d-1935554db565" },
-      })
-      .then((e) => {
-        setUserlist(e);
-        console.log("e", e);
-
-        setListarray(e.data.filter((a) => a.username !== list));
-        props.searchlist(e.data.filter((a) => a.username !== list));
-        props.setSearchtextarry2funtion(
-          e.data.filter((a) => a.username !== list)
-        );
-      });
-  }, []);
 
   return (
     <div
@@ -117,17 +101,25 @@ function Chat(props) {
               <div
                 key={b}
                 onClick={() => {
+                  props.apicallfunction(b);
+
                   props.section();
                   props.userdata(a);
-                  // props.postchat({
-                  //   username: a?.otherUser?.person?.username,
-                  // });
+
+                  const aa = a.people.filter((c) => {
+                    return a.admin.username == c.person.username;
+                  });
+                  aa[0].last_read == a.last_message.id
+                    ? setactive("")
+                    : setactive("new");
+
                   props.chatidd(a?.id);
                 }}
                 className="d-flex align-items-center username"
                 style={{
                   borderBottom: "1px solid rgb(201 215 237)",
                   padding: "5px 13px",
+                  backgroundColor: a?.isRead ? "" : "yellow",
                 }}
               >
                 <div
@@ -147,6 +139,7 @@ function Chat(props) {
                 >
                   {a?.otherUser?.person?.username}
                 </div>
+                <div></div>
               </div>
             )
           );

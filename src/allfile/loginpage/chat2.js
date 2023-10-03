@@ -9,7 +9,6 @@ function Chat2(props) {
   return (
     <div
       style={{
-        // background: "#f0f2f5",
         width: "100%",
         height: "100vh",
         backgroundSize: "97% 100%",
@@ -55,7 +54,7 @@ function Chat2(props) {
             display: "flex",
             flexDirection: "column",
             overflow: "scroll",
-            height: "365px",
+            height: "500px",
           }}
           className="px-3 pb-3"
         >
